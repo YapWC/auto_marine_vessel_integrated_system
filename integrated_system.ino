@@ -17,13 +17,10 @@
 #define SERVO_PIN 13 // ESP32 pin GPIO32 connected to Servo Motor's pin
 #define DISTANCE_THRESHOLD 80 // centimeters
 
-#define PWM_A 9 // Control Motor A Speed 
-#define MOTOR_A 26  // Motor A direction pins
-#define MOTOR_AA 25
-#define PWM_B 10  // Control Motor B Speed
-#define MOTOR_B 2 // Motor B direction pins
-#define MOTOR_BB 4
-
+#define A1 26  // Motor A pins
+#define A2 25
+#define B1 2 // Motor B pins
+#define B2 4
 
 QMC5883LCompass compass;
 
@@ -84,7 +81,7 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT); // set ESP32 pin to output mode
   pinMode(ECHO_PIN, INPUT);  // set ESP32 pin to input mode
   servo.attach(SERVO_PIN);   // attaches the servo on pin 9 to the servo object
-  servo.write(96);
+  servo.write(0);
   compass.setADDR(0x0D);
   compass.init();
 
@@ -93,10 +90,10 @@ void setup() {
   pinMode(B1, OUTPUT);
   pinMode(B2, OUTPUT);
 
-  digitalWrite(MOTOR_A, LOW);
-  digitalWrite(MOTOR_AA, LOW);
-  digitalWrite(MOTOR_B, LOW);
-  digitalWrite(MOTOR_BB, LOW);
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, LOW);
+  digitalWrite(B1, LOW);
+  digitalWrite(B2, LOW);
 
   // Set the destination coordinate here
   destination_x = 4.3816369;
@@ -241,46 +238,36 @@ void loop() {
     servo.write(96);
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(36);
-      forward(225, 0);
       delay(3000);
     }
   }
   else if (a > bearing+10) {
     //boat need to turn left
     servo.write(126);
-    forward(50, 225);
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(156);
-      forward(0, 225);
       delay(3000);
     }
   }
   else if (a < bearing-10) {
   //boat need to turn right
     servo.write(66);
-    forward(225, 50);
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(36);
-      forward(225, 0);
       delay(3000);
     }
   }
 
 
   //motor
-  // 1 unit of coordinate is equal to 111.195km
-  if ((lati >= destination_x-0.00001 && lati <= destination_x+0.00001) && 
-    (longi >= destination_y-0.00001 && longi <= destination_y+0.00001)){
-      // if the distance between vessel and target coordinate is less than 1.11m radius
-      // then destination is considered reach therefore vessel stop
-      stop()
-    }
+    
+  if(destination_x == lati && destination_y == longi){
+    Stop();
+  }
   
   delay(100);
   
 }
-
-// Starting from here it is all functions
 float ultrasonicMeasure() {
   // Generate a 10-microsecond pulse to TRIG pin
   digitalWrite(TRIG_PIN, HIGH);
@@ -295,31 +282,25 @@ float ultrasonicMeasure() {
 }
 
 //motor function
-void backward(speed_A, speed_B) {          //function of forward 
-  digitalWrite(MOTOR_A, HIGH);
-  digitalWrite(MOTOR_AA, LOW);
-  digitalWrite(MOTOR_B, HIGH);
-  digitalWrite(MOTOR_BB, LOW);
-
-  analogWrite(PWM_A, speed_A);
-  analogWrite(PWM_B, speed_B);
+void backward() {          //function of forward 
+  digitalWrite(A1, HIGH);
+  digitalWrite(A2, LOW);
+  digitalWrite(B1, HIGH);
+  digitalWrite(B2, LOW);
 }
 
-void forward(speed_A, speed_B) {         //function of backward
-  digitalWrite(MOTOR_A, LOW);
-  digitalWrite(MOTOR_AA, HIGH);
-  digitalWrite(MOTOR_B, LOW);
-  digitalWrite(MOTOR_BB, HIGH);
-
-  analogWrite(PWM_A, speed_A);
-  analogWrite(PWM_B, speed_B);
+void forward() {         //function of backward
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, HIGH);
+  digitalWrite(B1, LOW);
+  digitalWrite(B2, HIGH);
 }
 
-void stop() {              //function of stop
-  digitalWrite(MOTOR_A, LOW);
-  digitalWrite(MOTOR_AA, LOW);
-  digitalWrite(MOTOR_B, LOW);
-  digitalWrite(MOTOR_BB, LOW);
+void Stop() {              //function of stop
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, LOW);
+  digitalWrite(B1, LOW);
+  digitalWrite(B2, LOW);
 }
 
 //gps
