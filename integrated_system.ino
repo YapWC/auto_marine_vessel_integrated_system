@@ -17,10 +17,10 @@
 #define SERVO_PIN 13 // ESP32 pin GPIO32 connected to Servo Motor's pin
 #define DISTANCE_THRESHOLD 80 // centimeters
 
-#define PWM_A 9 // Control Motor A Speed 
+#define PWM_A 23 // Control Motor A Speed 
 #define MOTOR_A 26  // Motor A direction pins
 #define MOTOR_AA 25
-#define PWM_B 10  // Control Motor B Speed
+#define PWM_B 33  // Control Motor B Speed
 #define MOTOR_B 2 // Motor B direction pins
 #define MOTOR_BB 4
 
@@ -88,10 +88,10 @@ void setup() {
   compass.setADDR(0x0D);
   compass.init();
 
-  pinMode(A1, OUTPUT);
-  pinMode(A2, OUTPUT);
-  pinMode(B1, OUTPUT);
-  pinMode(B2, OUTPUT);
+  pinMode(MOTOR_A, OUTPUT);
+  pinMode(MOTOR_AA, OUTPUT);
+  pinMode(MOTOR_B, OUTPUT);
+  pinMode(MOTOR_BB, OUTPUT);
 
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_AA, LOW);
@@ -239,29 +239,27 @@ void loop() {
   if (bearing-10 < a && a < bearing+10) {
     // boat remain straight line
     servo.write(96);
+    forward();
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(36);
-      forward(225, 0);
       delay(3000);
     }
   }
   else if (a > bearing+10) {
     //boat need to turn left
     servo.write(126);
-    forward(50, 225);
+    left();
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(156);
-      forward(0, 225);
       delay(3000);
     }
   }
   else if (a < bearing-10) {
   //boat need to turn right
     servo.write(66);
-    forward(225, 50);
+    right();
     if (filtered_distance < DISTANCE_THRESHOLD) {
       servo.write(36);
-      forward(225, 0);
       delay(3000);
     }
   }
@@ -273,7 +271,7 @@ void loop() {
     (longi >= destination_y-0.00001 && longi <= destination_y+0.00001)){
       // if the distance between vessel and target coordinate is less than 1.11m radius
       // then destination is considered reach therefore vessel stop
-      stop()
+      stop();
     }
   
   delay(100);
@@ -295,24 +293,44 @@ float ultrasonicMeasure() {
 }
 
 //motor function
-void backward(speed_A, speed_B) {          //function of forward 
+void backward() {          //function of forward 
   digitalWrite(MOTOR_A, HIGH);
   digitalWrite(MOTOR_AA, LOW);
   digitalWrite(MOTOR_B, HIGH);
   digitalWrite(MOTOR_BB, LOW);
 
-  analogWrite(PWM_A, speed_A);
-  analogWrite(PWM_B, speed_B);
+  analogWrite(PWM_A, 90);
+  analogWrite(PWM_B, 90);
 }
 
-void forward(speed_A, speed_B) {         //function of backward
+void forward() {         //function of backward
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_AA, HIGH);
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, speed_A);
-  analogWrite(PWM_B, speed_B);
+  analogWrite(PWM_A, 90);
+  analogWrite(PWM_B, 90);
+}
+
+void right() {         //function of backward
+  digitalWrite(MOTOR_A, LOW);
+  digitalWrite(MOTOR_AA, HIGH);
+  digitalWrite(MOTOR_B, LOW);
+  digitalWrite(MOTOR_BB, HIGH);
+
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 90);
+}
+
+void left() {         //function of backward
+  digitalWrite(MOTOR_A, LOW);
+  digitalWrite(MOTOR_AA, HIGH);
+  digitalWrite(MOTOR_B, LOW);
+  digitalWrite(MOTOR_BB, HIGH);
+
+  analogWrite(PWM_A, 90);
+  analogWrite(PWM_B, 0);
 }
 
 void stop() {              //function of stop
