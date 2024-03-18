@@ -183,14 +183,6 @@ void loop() {
   Serial.print(filtered_distance);
   Serial.println(" cm");
 
- /*if (!Ultrasonic.publish(filtered_distance)) {                     //Publish to Adafruit
-      Serial.println(F("Ultrasonic Failed"));
-    }
-    else {
-      Serial.println(F("Ultrasonic Sent!"));
-    }
-    //delay(2000);
-    */
   //Magentometer
     
   
@@ -199,7 +191,7 @@ void loop() {
 
   // Return Azimuth reading
   a = compass.getAzimuth();
-  a = a - 90
+  a = a - 90;
   if (a < 0){
     a = 360 + a; // minus 80 for calibration
   }
@@ -207,41 +199,17 @@ void loop() {
   Serial.print(a);
   Serial.println();
 
-   /* if (!Magnetometer.publish(a)) {                     //Publish to Adafruit
-      Serial.println(F("Bearing Failed"));
-    }
-    else {
-      Serial.println(F("Bearing Sent!"));
-    }
-    delay(5000);
-    */
 //gps
   getCoordinates();
   Serial.print("Lati = ");
   Serial.print(lati,17);
   Serial.print("\tLongi = ");
   Serial.println(longi,17);
-/*
-    if (!GPSLocation.publish(gpsdata)) {                     //Publish to Adafruit
-      Serial.println(F("GPS Failed"));
-    }
-    else {
-      Serial.println(F("GPS Sent!"));
-    }
-    //delay(2000);
-    */
+
   bearing = calculate_gps_heading(lati, longi, destination_x, destination_y);
   Serial.print("Target Angle = ");
   Serial.println(bearing,17);
-  /*
-      if (!Target.publish(bearing)) {                     //Publish to Adafruit
-      Serial.println(F("Target Angle Failed"));
-    }
-    else {
-      Serial.println(F("Target Angle Sent!"));
-    }
-    //delay(2000);
-*/
+  
 // motor
   if (bearing-10 < a && a < bearing+10) {
     // boat remain straight line
@@ -404,7 +372,6 @@ static void waitGPS(unsigned long ms)
  } while (millis() - start < ms);
 }
 
-
 // For Bearing Calculation for Current and Destination Coordinate
 static inline double to_rad(double theta) {
     return (theta * M_PI) / 180.0;
@@ -437,7 +404,6 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     if (heading < 0){
       heading = abs(heading)+180;
     }
-    
     return heading;
 }
 void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
@@ -447,7 +413,6 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     else {
       Serial.println(F("Target Angle Sent!"));
     }
-    //delay(2000);
 
     if (!GPSLocation.publish(gpsdata)) {                     //Publish to Adafruit
       Serial.println(F("GPS Failed"));
@@ -455,19 +420,16 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     else {
       Serial.println(F("GPS Sent!"));
     }
-    //delay(2000);
     if (!Ultrasonic.publish(filtered_distance)) {                     //Publish to Adafruit
       Serial.println(F("Ultrasonic Failed"));
     }
     else {
       Serial.println(F("Ultrasonic Sent!"));
     }
-    //delay(2000);
     if (!Magnetometer.publish(a)) {                     //Publish to Adafruit
       Serial.println(F("Bearing Failed"));
     }
     else {
       Serial.println(F("Bearing Sent!"));
     }
-    //delay(5000);
 }
