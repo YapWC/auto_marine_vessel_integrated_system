@@ -24,6 +24,9 @@
 #define MOTOR_B 2 // Motor B direction pins
 #define MOTOR_BB 4
 
+// Object detecttion pin for left and right
+#define OBJECT_LEFT xx
+#define OBJECT_RIGHT xx
 
 QMC5883LCompass compass;
 
@@ -72,6 +75,10 @@ double bearing;
 char gpsdata[120];
 int a;
 
+//object detection
+int object_detected_left = 0;
+int object_detected_right = 0;
+
 #define ARRAY_SIZE 5 // Size of the array
 #define DELAY_BETWEEN_MEASUREMENTS 30 // Delay between ultrasonic measurements in milliseconds
 
@@ -101,6 +108,15 @@ void setup() {
   digitalWrite(MOTOR_AA, LOW);
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, LOW);
+
+  pinMode(PWM_A, OUTPUT);
+  pinMode(PWM_B, OUTPUT);
+
+  analogWrite(PWM_A, OUTPUT);
+  analogWrite(PWM_B, OUTPUT);
+
+  pinMode(OBJECT_LEFT, INPUT);
+  pinMode(OBJECT_RIGHT, INPUT);
 
   // Set the destination coordinate here
   destination_x = 4.3816416;
@@ -137,9 +153,9 @@ void connect() {
       default: Serial.println(F("Connection failed")); break;
     }
  
-    if(ret >= 0)
+    if(ret >= 0) {
       mqtt.disconnect();
- 
+    }
     Serial.println(F("Retrying connection..."));
     delay(10000);
   }
@@ -151,8 +167,9 @@ void loop() {
   // Adafruit MQTT initialization:
   if(! mqtt.ping(3)) {
     // reconnect to adafruit io
-    if(! mqtt.connected())
+    if(! mqtt.connected()) {
       connect();
+    }
   }
    
   // Ultrasonic sensor measurements with noise filtering
@@ -210,38 +227,44 @@ void loop() {
   Serial.print("Target Angle = ");
   Serial.println(bearing,17);
   
+// object detection
+object_detected_left = digitalRead(OBJECT_LEFT);
+object_detected_right = digitalRead(OBJECT_RIGHT);
+
 // motor
+  if (filtered_distance < DISTANCE_THRESHOLD) {
+      // turn right
+      servo.write(66);
+      right();
+      servo.write(96);
+      forward();
+    }
+
   if (bearing-10 < a && a < bearing+10) {
-    // boat remain straight line
-    servo.write(96);
-    forward();
-    delay(1500);
-    if (filtered_distance < DISTANCE_THRESHOLD) {
-      servo.write(36);
-      delay(1000);
+    if (object_detected_left == HIGH) {
+      servo.write(66);
+      right();
+    } else if (object_detected_right == HIGH) {
+      servo.write(126);
+      left();
+    } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
+      servo.write(126);
+      forward();
+    } else {
+      servo.write(96);
+      forward();
     }
   }
   else if (a > bearing+10) {
     //boat need to turn left
     servo.write(126);
     left();
-    delay(1500);
-    if (filtered_distance < DISTANCE_THRESHOLD) {
-      servo.write(156);
-      delay(1000);
-    }
   }
   else if (a < bearing-10) {
   //boat need to turn right
     servo.write(66);
     right();
-    delay(1500);
-    if (filtered_distance < DISTANCE_THRESHOLD) {
-      servo.write(36);
-      delay(1000);
-    }
   }
-
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
@@ -296,6 +319,7 @@ void forward() {         //function of backward
 
   analogWrite(PWM_A, 150);
   analogWrite(PWM_B, 150);
+  delay(3000);
 }
 
 void right() {         //function of backward
@@ -306,6 +330,7 @@ void right() {         //function of backward
 
   analogWrite(PWM_A, 0);
   analogWrite(PWM_B, 150);
+  delay(1000);
 }
 
 void left() {         //function of backward
@@ -316,6 +341,7 @@ void left() {         //function of backward
 
   analogWrite(PWM_A, 150);
   analogWrite(PWM_B, 0);
+  delay(1000);
 }
 
 void stop() {              //function of stop
@@ -326,50 +352,50 @@ void stop() {              //function of stop
 }
 
 //gps
-void getCoordinates()
-{
- readGPSData();
- char *p = gpsdata;
- // add speed value
- dtostrf(speed_mph, 2, 17, p);
- p += strlen(p);
- p[0] = ','; p++;
- // concat latitude
- dtostrf(lati, 2, 17, p);
- p += strlen(p);
- p[0] = ','; p++;
- // concat longitude
- dtostrf(longi, 3, 17, p);
- p += strlen(p);
- p[0] = ','; p++;
- // concat altitude
- dtostrf(alltitude, 2, 17, p);
- p += strlen(p);
- // null terminate
- p[0] = 0;
+void getCoordinates() {
+  readGPSData();
+  char *p = gpsdata;
+  // add speed value
+  dtostrf(speed_mph, 2, 17, p);
+  p += strlen(p);
+  p[0] = ','; p++;
+  // concat latitude
+  dtostrf(lati, 2, 17, p);
+  p += strlen(p);
+  p[0] = ','; p++;
+  // concat longitude
+  dtostrf(longi, 3, 17, p);
+  p += strlen(p);
+  p[0] = ','; p++;
+  // concat altitude
+  dtostrf(alltitude, 2, 17, p);
+  p += strlen(p);
+  // null terminate
+  p[0] = 0;
 }
-void readGPSData()
-{
- if(gps.location.isValid()){
- lati = gps.location.lat();
- longi = gps.location.lng();
- Serial.print("Lati: ");
- Serial.print(lati,17);
- Serial.print("\tLongi: ");
- Serial.println(longi,17);
- }
- waitGPS(100);
- if (millis() > 5000 && gps.charsProcessed() < 10)
- Serial.println("Waiting for data...");
+
+void readGPSData() {
+  if (gps.location.isValid()) {
+    lati = gps.location.lat();
+    longi = gps.location.lng();
+    Serial.print("Lati: ");
+    Serial.print(lati,17);
+    Serial.print("\tLongi: ");
+    Serial.println(longi,17);
+  }
+  waitGPS(100);
+  
+  if (millis() > 5000 && gps.charsProcessed() < 10){
+    Serial.println("Waiting for data...");
+  }
 }
-static void waitGPS(unsigned long ms)
-{
- unsigned long start = millis();
- do
- {
- while (softSerial.available())
- gps.encode(softSerial.read());
- } while (millis() - start < ms);
+
+static void waitGPS(unsigned long ms) {
+  unsigned long start = millis();
+  do {
+    while (softSerial.available())
+    gps.encode(softSerial.read());
+    } while (millis() - start < ms);
 }
 
 // For Bearing Calculation for Current and Destination Coordinate
