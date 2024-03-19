@@ -121,8 +121,8 @@ void setup() {
   pinMode(OBJECT_RIGHT, INPUT);
 
   // Set the destination coordinate here
-  destination_x = 4.3815537;
-  destination_y = 100.9659863;
+  destination_x = 4.381547451;
+  destination_y = 100.9660034;
 
   Serial.print(F("Connecting to "));
   Serial.println(WLAN_SSID);
@@ -237,9 +237,8 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
   if (filtered_distance < DISTANCE_THRESHOLD) {
       // turn right
       servo.write(66);
-      right();
-      servo.write(96);
-      forward();
+      reverse();
+      u_turn();
     }
 
   if (bearing-10 < a && a < bearing+10) {
@@ -258,23 +257,34 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     }
   }
   else if (a > bearing+10) {
-    //boat need to turn left
-    servo.write(126);
-    left();
+    if (a > bearing+180){
+    //boat need to turn right
+      servo.write(66);
+      right();
+    } else {
+      servo.write(126);
+      left();
+    }
   }
   else if (a < bearing-10) {
   //boat need to turn right
-    servo.write(66);
-    right();
+    if (a < bearing-180){
+      servo.write(126);
+      left();
+    } else {
+      servo.write(66);
+      right();
+    }
   }
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
-  if ((lati >= destination_x-0.00001 && lati <= destination_x+0.00001) && 
-    (longi >= destination_y-0.00001 && longi <= destination_y+0.00001)){
+  if ((lati >= destination_x-0.00002 && lati <= destination_x+0.00002) && 
+    (longi >= destination_y-0.00002 && longi <= destination_y+0.00002)){
       // if the distance between vessel and target coordinate is less than 1.11m radius
       // then destination is considered reach therefore vessel stop
       stop();
+      delay(10000);
     }
   
    // Check if it's time to publish
@@ -303,14 +313,26 @@ float ultrasonicMeasure() {
 }
 
 //motor function
-void backward() {          //function of forward 
+void reverse() {          //function of forward 
   digitalWrite(MOTOR_A, HIGH);
   digitalWrite(MOTOR_AA, LOW);
   digitalWrite(MOTOR_B, HIGH);
   digitalWrite(MOTOR_BB, LOW);
 
-  analogWrite(PWM_A, 90);
-  analogWrite(PWM_B, 90);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
+  delay(2000);
+}
+
+void u_turn() {          //function of forward 
+  digitalWrite(MOTOR_A, HIGH);
+  digitalWrite(MOTOR_AA, LOW);
+  digitalWrite(MOTOR_B, LOW);
+  digitalWrite(MOTOR_BB, HIGH);
+
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
+  delay(1500);
 }
 
 void forward() {         //function of backward
@@ -324,7 +346,7 @@ void forward() {         //function of backward
   delay(3000);
 }
 
-void right() {         //function of backward
+void left() {         //function of backward
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_AA, HIGH);
   digitalWrite(MOTOR_B, LOW);
@@ -332,10 +354,10 @@ void right() {         //function of backward
 
   analogWrite(PWM_A, 0);
   analogWrite(PWM_B, 200);
-  delay(1000);
+  delay(1500);
 }
 
-void left() {         //function of backward
+void right() {         //function of backward
   digitalWrite(MOTOR_A, LOW);
   digitalWrite(MOTOR_AA, HIGH);
   digitalWrite(MOTOR_B, LOW);
@@ -343,7 +365,7 @@ void left() {         //function of backward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 0);
-  delay(1000);
+  delay(1500);
 }
 
 void stop() {              //function of stop
