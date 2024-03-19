@@ -235,47 +235,38 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
 
 // motor
   if (filtered_distance < DISTANCE_THRESHOLD) {
-      // turn right
       servo.write(66);
       reverse();
       u_turn();
-    }
+  }
 
-  if (bearing-10 < a && a < bearing+10) {
-    if (object_detected_left == HIGH) {
-      servo.write(66);
-      right();
-    } else if (object_detected_right == HIGH) {
-      servo.write(126);
-      left();
-    } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
-      servo.write(126);
-      forward();
-    } else {
-      servo.write(96);
-      forward();
+  while (bearing-10 < a && a < bearing+10) {
+    if (filtered_distance < 100) {
+      if (object_detected_left == HIGH) {
+        servo.write(66);
+        right();
+      } else if (object_detected_right == HIGH) {
+        servo.write(126);
+        left();
+      } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
+        servo.write(126);
+        forward();
+      }
     }
+    servo.write(96);
+    forward();
   }
-  else if (a > bearing+10) {
-    if (a > bearing+180){
+
+  while (a > bearing+10) {
+    servo.write(126);
+    left();
+    }
+  
+  while (a < bearing-10) {
     //boat need to turn right
-      servo.write(66);
-      right();
-    } else {
-      servo.write(126);
-      left();
+    servo.write(66);
+    right();
     }
-  }
-  else if (a < bearing-10) {
-  //boat need to turn right
-    if (a < bearing-180){
-      servo.write(126);
-      left();
-    } else {
-      servo.write(66);
-      right();
-    }
-  }
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
@@ -343,7 +334,6 @@ void forward() {         //function of backward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 200);
-  delay(3000);
 }
 
 void left() {         //function of backward
@@ -354,7 +344,7 @@ void left() {         //function of backward
 
   analogWrite(PWM_A, 0);
   analogWrite(PWM_B, 200);
-  delay(1500);
+  delay(500);
 }
 
 void right() {         //function of backward
@@ -365,7 +355,7 @@ void right() {         //function of backward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 0);
-  delay(1500);
+  delay(500);
 }
 
 void stop() {              //function of stop
