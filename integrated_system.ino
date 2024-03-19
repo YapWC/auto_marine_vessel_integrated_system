@@ -25,8 +25,8 @@
 #define MOTOR_BB 4
 
 // Object detecttion pin for left and right
-#define OBJECT_LEFT xx
-#define OBJECT_RIGHT xx
+#define OBJECT_LEFT 34
+#define OBJECT_RIGHT 35
 
 QMC5883LCompass compass;
 
@@ -98,6 +98,8 @@ void setup() {
   servo.write(96);
   compass.setADDR(0x0D);
   compass.init();
+  compass.setCalibrationOffsets(-457.00, 426.00, 147.00);
+  compass.setCalibrationScales(0.78, 0.76, 2.48);
 
   pinMode(MOTOR_A, OUTPUT);
   pinMode(MOTOR_AA, OUTPUT);
@@ -119,8 +121,8 @@ void setup() {
   pinMode(OBJECT_RIGHT, INPUT);
 
   // Set the destination coordinate here
-  destination_x = 4.3816416;
-  destination_y = 100.9668201;
+  destination_x = 4.3815537;
+  destination_y = 100.9659863;
 
   Serial.print(F("Connecting to "));
   Serial.println(WLAN_SSID);
@@ -317,8 +319,8 @@ void forward() {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
   delay(3000);
 }
 
@@ -329,7 +331,7 @@ void right() {         //function of backward
   digitalWrite(MOTOR_BB, HIGH);
 
   analogWrite(PWM_A, 0);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_B, 200);
   delay(1000);
 }
 
@@ -339,7 +341,7 @@ void left() {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
+  analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 0);
   delay(1000);
 }
