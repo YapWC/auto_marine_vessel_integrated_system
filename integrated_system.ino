@@ -41,8 +41,8 @@ SoftwareSerial softSerial(RXPin, TXPin);
 
 
 // WiFi parameters
-#define WLAN_SSID       "Hilman’s iPhone"
-#define WLAN_PASS       "hilman318"
+#define WLAN_SSID       "Alexa" //"Hilman’s iPhone"
+#define WLAN_PASS       "67899876" //"hilman318"
  
  
 // Adafruit IO
@@ -211,8 +211,8 @@ void loop() {
   // Return Azimuth reading
   a = compass.getAzimuth();
   a = a - 90;
-  if (a < 0){
-    a = 360 + a; // minus 80 for calibration
+  if (a < -180){
+    a = a + 360; // minus 80 for calibration
   }
   Serial.print("Vessel Angle: ");
   Serial.print(a);
@@ -451,9 +451,6 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     
     // We want heading in degrees, not radians.
     heading = to_degrees(heading);
-    if (heading < 0){
-      heading = abs(heading)+180;
-    }
     return heading;
 }
 void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
