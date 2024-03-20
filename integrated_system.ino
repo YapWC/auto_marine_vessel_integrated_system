@@ -41,9 +41,9 @@ SoftwareSerial softSerial(RXPin, TXPin);
 
 
 // WiFi parameters
-#define WLAN_SSID       "Hilman’s iPhone"
-#define WLAN_PASS       "hilman318"
- 
+#define WLAN_SSID       "Alexa"
+#define WLAN_PASS       "67899876"
+
  
 // Adafruit IO
 #define AIO_SERVER      "io.adafruit.com"
@@ -69,8 +69,14 @@ float speed_mph = 0;
 float alltitude = 0;
 float lati; //Storing the Latitude
 float longi; //Storing the Longitude
-float destination_x;
-float destination_y;
+float destination_x = 4.3815129;
+float destination_y = 100.9659152;
+float destination_x2 = 4.3817241;
+float destination_y2 = 100.9658253;
+float destination_x3 = 4.3815697;
+float destination_y3 = 100.9657428;
+
+int destination_counter = 0;
 double bearing;
 char gpsdata[120];
 int a;
@@ -120,10 +126,6 @@ void setup() {
   pinMode(OBJECT_LEFT, INPUT);
   pinMode(OBJECT_RIGHT, INPUT);
 
-  // Set the destination coordinate here
-  destination_x = 4.381547451;
-  destination_y = 100.9660034;
-
   Serial.print(F("Connecting to "));
   Serial.println(WLAN_SSID);
   WiFi.begin(WLAN_SSID, WLAN_PASS);
@@ -165,7 +167,6 @@ void connect() {
 }
 
 void loop() {
-  forward();
   // Adafruit MQTT initialization:
   if(! mqtt.ping(3)) {
     // reconnect to adafruit io
@@ -211,8 +212,8 @@ void loop() {
   // Return Azimuth reading
   a = compass.getAzimuth();
   a = a - 90;
-  if (a < 0){
-    a = 360 + a; // minus 80 for calibration
+  if (a < -180){
+    a = a + 360; // minus 80 for calibration
   }
   Serial.print("Vessel Angle: ");
   Serial.print(a);
@@ -257,34 +258,35 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     }
   }
   else if (a > bearing+10) {
-    if (a > bearing+180){
-    //boat need to turn right
-      servo.write(66);
-      right();
-    } else {
-      servo.write(126);
-      left();
-    }
+    servo.write(126);
+    left();
+    delay(2000);
   }
   else if (a < bearing-10) {
   //boat need to turn right
-    if (a < bearing-180){
-      servo.write(126);
-      left();
-    } else {
-      servo.write(66);
-      right();
-    }
+    servo.write(66);
+    right();
+    delay(2000);
   }
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
-  if ((lati >= destination_x-0.00002 && lati <= destination_x+0.00002) && 
-    (longi >= destination_y-0.00002 && longi <= destination_y+0.00002)){
+  if ((lati >= destination_x-0.00003 && lati <= destination_x+0.00003) && 
+    (longi >= destination_y-0.00003 && longi <= destination_y+0.00003)){
       // if the distance between vessel and target coordinate is less than 1.11m radius
       // then destination is considered reach therefore vessel stop
-      stop();
-      delay(10000);
+      if (destination_counter == 0) {
+        destination_x = destination_x2;
+        destination_y = destination_y2;
+      }
+      else if (destination_counter == 1) {
+        destination_x = destination_x3;
+        destination_y = destination_y3;
+      } else {
+        stop();
+        delay(10000);
+      }
+      destination_counter = destination_counter + 1;
     }
   
    // Check if it's time to publish
@@ -321,7 +323,9 @@ void reverse() {          //function of forward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 200);
-  delay(2000);
+  delay(3000);
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 0);
 }
 
 void u_turn() {          //function of forward 
@@ -332,7 +336,9 @@ void u_turn() {          //function of forward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 200);
-  delay(1500);
+  delay(1700);
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 0);
 }
 
 void forward() {         //function of backward
@@ -344,6 +350,8 @@ void forward() {         //function of backward
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 200);
   delay(3000);
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 0);
 }
 
 void left() {         //function of backward
@@ -354,7 +362,9 @@ void left() {         //function of backward
 
   analogWrite(PWM_A, 0);
   analogWrite(PWM_B, 200);
-  delay(1500);
+  delay(500);
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 0);
 }
 
 void right() {         //function of backward
@@ -365,7 +375,9 @@ void right() {         //function of backward
 
   analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 0);
-  delay(1500);
+  delay(700);
+  analogWrite(PWM_A, 0);
+  analogWrite(PWM_B, 0);
 }
 
 void stop() {              //function of stop
