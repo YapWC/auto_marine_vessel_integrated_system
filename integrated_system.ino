@@ -66,13 +66,14 @@ float speed_mph = 0;
 float alltitude = 0;
 double lati; //Storing the Latitude
 double longi; //Storing the Longitude
-double destination_x[3] = {4.38164783299999971, 4.3815580, 4.3816884};
-double destination_y[3] = {100.96574383300000476, 100.9659916, 100.9659437};
+double destination_x[3] = {4.3816466, 4.3815573, 4.3816887};
+double destination_y[3] = {100.9660027, 100.9659906, 100.9659430};
 
 int destination_counter = 0;
 double bearing;
 char gpsdata[120];
 int a;
+int left_right_counter = 0;
 
 //object detection
 int object_detected_left = 0;
@@ -196,16 +197,7 @@ void loop() {
   Serial.print(filtered_distance);
   Serial.println(" cm");
 
-  //Magentometer
-  // Read compass values
-  compass.read();
-
-  // Return Azimuth reading
-  a = compass.getAzimuth();
-  a = a - 90;
-  if (a < -180){
-    a = a + 360; // minus 80 for calibration
-  }
+  a = get_azimuth();
   Serial.print("Vessel Angle: ");
   Serial.print(a);
   Serial.println();
@@ -228,7 +220,7 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
 // motor
   while (bearing-10 < a && a < bearing+10) {
     servo.write(96);
-    forward(0);
+    forward(500);
     if (filtered_distance < DISTANCE_THRESHOLD) {
       // turn right
       servo.write(66);
@@ -250,19 +242,27 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
         forward(3000);
       }
     }
+    a = get_azimuth();
   }
   
-  while (a > bearing+5) {
+  if (a > bearing+5) {
     servo.write(126);
-    left(0);
+    left(500);
+    left_right_counter = 1;
   }
-  right(500);
-  while (a < bearing-5) {
+  /*if (left_right_counter == 1) {
+    right(500);
+  }*/
+  
+  if (a < bearing-5) {
   //boat need to turn right
     servo.write(66);
-    right(0);
+    right(500);
+    left_right_counter = 11;
   }
-  left(500);
+  /*if (left_right_counter == 11) {
+    left(500);
+  }*/
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
@@ -450,9 +450,6 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     
     // We want heading in degrees, not radians.
     heading = to_degrees(heading);
-    if (heading < 0){
-      heading = abs(heading)+180;
-    }
     return heading;
 }
 void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
@@ -481,4 +478,17 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     else {
       Serial.println(F("Bearing Sent!"));
     }
+}
+
+int get_azimuth() {
+  //Magentometer
+  // Read compass values
+  compass.read();
+  // Return Azimuth reading
+  a = compass.getAzimuth();
+  a = a - 90;
+  if (-90 <= a <= -180){
+    a = a + 360; // minus 80 for calibration
+  }
+  return a;
 }
