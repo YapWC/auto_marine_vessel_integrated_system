@@ -66,14 +66,13 @@ float speed_mph = 0;
 float alltitude = 0;
 double lati; //Storing the Latitude
 double longi; //Storing the Longitude
-double destination_x[3] = {4.3816466, 4.3815573, 4.3816887};
-double destination_y[3] = {100.9660027, 100.9659906, 100.9659430};
+double destination_x[3] = {4.3815366, 4.3816513, 4.3815630};
+double destination_y[3] = {100.9658786, 100.9658391, 100.9657422};
 
 int destination_counter = 0;
 double bearing;
 char gpsdata[120];
 int a;
-int left_right_counter = 0;
 
 //object detection
 int object_detected_left = 0;
@@ -213,11 +212,16 @@ void loop() {
   Serial.print("Target Angle = ");
   Serial.println(bearing,17);
   
-// object detection
-object_detected_left = digitalRead(OBJECT_LEFT);
-object_detected_right = digitalRead(OBJECT_RIGHT);
+  // object detection
+  object_detected_left = digitalRead(OBJECT_LEFT);
+  object_detected_right = digitalRead(OBJECT_RIGHT);
 
-// motor
+  // motor
+  if ((bearing+10 > 360) && (a > 0 && a < 90) || (bearing+5 > 360) && (a > 0 && a < 90)) {
+    a = a + 360;
+  } else if ((bearing-10 < 0) && (a < 360 && a > 270) || (bearing+10 > 360) && (a > 0 && a < 90)) {
+    a = a - 360;
+  }
   while (bearing-10 < a && a < bearing+10) {
     servo.write(96);
     forward(500);
@@ -231,38 +235,28 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     if (filtered_distance < 150) {
       if (object_detected_left == HIGH) {
         servo.write(66);
-        right(1500);
-        forward(3000);
+        slightRight(1000);
       } else if (object_detected_right == HIGH) {
         servo.write(126);
-        left(1500);
-        forward(3000);
+        slightLeft(1000);
       } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
         servo.write(96);
-        forward(3000);
+        forward(1000);
       }
     }
     a = get_azimuth();
   }
-  
+
   if (a > bearing+5) {
     servo.write(126);
     left(500);
-    left_right_counter = 1;
   }
-  /*if (left_right_counter == 1) {
-    right(500);
-  }*/
   
   if (a < bearing-5) {
   //boat need to turn right
     servo.write(66);
     right(500);
-    left_right_counter = 11;
   }
-  /*if (left_right_counter == 11) {
-    left(500);
-  }*/
 
   //motor
   // 1 unit of coordinate is equal to 111.195km
@@ -275,12 +269,11 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     Serial.println(destination_x[destination_counter], 7);
     Serial.println(destination_y[destination_counter], 7);
     stop();
-    delay(10000);
-    destination_counter = destination_counter + 1;
-    Serial.println(destination_counter);
-    Serial.println(destination_x[destination_counter], 7);
-    Serial.println(destination_y[destination_counter], 7);
+    delay(5000);
+    if (destination_counter != 2) {
+      destination_counter = destination_counter + 1;
     }
+  }
   Serial.println(destination_counter);
    // Check if it's time to publish
   if (currentMillis - previousMillis >= 8000) {
@@ -363,6 +356,28 @@ void right(int delay_second) {         //function of backward
 
   analogWrite(PWM_A, 220);
   analogWrite(PWM_B, 0);
+  delay(delay_second);
+}
+
+void slightRight(int delay_second) {
+  digitalWrite(MOTOR_A, LOW);
+  digitalWrite(MOTOR_AA, HIGH);
+  digitalWrite(MOTOR_B, LOW);
+  digitalWrite(MOTOR_BB, HIGH);
+
+  analogWrite(PWM_A, 220);
+  analogWrite(PWM_B, 190);
+  delay(delay_second);
+}
+
+void slightLeft(int delay_second) {         //function of backward
+  digitalWrite(MOTOR_A, LOW);
+  digitalWrite(MOTOR_AA, HIGH);
+  digitalWrite(MOTOR_B, LOW);
+  digitalWrite(MOTOR_BB, HIGH);
+
+  analogWrite(PWM_A, 190);
+  analogWrite(PWM_B, 220);
   delay(delay_second);
 }
 
@@ -450,6 +465,9 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     
     // We want heading in degrees, not radians.
     heading = to_degrees(heading);
+    if (heading < 0) {
+    heading = heading + 360;
+  }
     return heading;
 }
 void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
@@ -487,8 +505,8 @@ int get_azimuth() {
   // Return Azimuth reading
   a = compass.getAzimuth();
   a = a - 90;
-  if (-90 <= a <= -180){
-    a = a + 360; // minus 80 for calibration
+  if (a < 0) {
+    a = a + 360;
   }
   return a;
 }
