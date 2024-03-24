@@ -79,6 +79,11 @@ int a;
 int object_detected_left = 0;
 int object_detected_right = 0;
 
+// Power consumption
+float voltage = 5.0;
+float current = 0.5;
+float total_power_consumption = 0.0;
+
 #define ARRAY_SIZE 5 // Size of the array
 #define DELAY_BETWEEN_MEASUREMENTS 30 // Delay between ultrasonic measurements in milliseconds
 
@@ -239,21 +244,26 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
       servo.write(66);
       reverse();
       u_turn();
+      calculate_power_consumption(3500);
     }
 
   if (bearing-10 < a && a < bearing+10) {
     if (object_detected_left == HIGH) {
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     } else if (object_detected_right == HIGH) {
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
       servo.write(126);
       forward();
+      calculate_power_consumption(500);
     } else {
       servo.write(96);
       forward();
+      calculate_power_consumption(500);
     }
   }
   else if (a > bearing+10) {
@@ -261,9 +271,11 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     //boat need to turn right
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     } else {
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     }
   }
   else if (a < bearing-10) {
@@ -271,9 +283,11 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     if (a < bearing-180){
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     } else {
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     }
   }
 
@@ -482,4 +496,11 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     else {
       Serial.println(F("Bearing Sent!"));
     }
+}
+
+void calculate_power_consumption(int seconds) {
+  float power = voltage*current;
+  float power_per_second = power/3600;
+  float total = power_per_second*seconds;
+  total_power_consumption = total_power_consumption + total;
 }
