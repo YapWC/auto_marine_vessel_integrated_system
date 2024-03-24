@@ -66,8 +66,8 @@ float speed_mph = 0;
 float alltitude = 0;
 double lati; //Storing the Latitude
 double longi; //Storing the Longitude
-double destination_x[3] = {4.3815366, 4.3816513, 4.3815630};
-double destination_y[3] = {100.9658786, 100.9658391, 100.9657422};
+double destination_x[3] = {4.381565, 4.381669, 4.381604};
+double destination_y[3] = {100.965886, 100.965819, 100.965709};
 
 int destination_counter = 0;
 double bearing;
@@ -217,12 +217,12 @@ void loop() {
   object_detected_right = digitalRead(OBJECT_RIGHT);
 
   // motor
-  if ((bearing+10 > 360) && (a > 0 && a < 90) || (bearing+5 > 360) && (a > 0 && a < 90)) {
+  if ((bearing+20 > 360) && (a > 0 && a < 90) || (bearing+5 > 360) && (a > 0 && a < 90)) {
     a = a + 360;
-  } else if ((bearing-10 < 0) && (a < 360 && a > 270) || (bearing+10 > 360) && (a > 0 && a < 90)) {
+  } else if ((bearing-20 < 0) && (a < 360 && a > 270) || (bearing-5< 0) && (a > 0 && a < 90)) {
     a = a - 360;
   }
-  while (bearing-10 < a && a < bearing+10) {
+  while (bearing-20 < a && a < bearing+20) {
     servo.write(96);
     forward(500);
     if (filtered_distance < DISTANCE_THRESHOLD) {
@@ -310,8 +310,8 @@ void reverse() {          //function of forward
   digitalWrite(MOTOR_B, HIGH);
   digitalWrite(MOTOR_BB, LOW);
 
-  analogWrite(PWM_A, 220);
-  analogWrite(PWM_B, 220);
+  analogWrite(PWM_A, 150);
+  analogWrite(PWM_B, 150);
   delay(3000);
 }
 
@@ -321,8 +321,8 @@ void u_turn() {          //function of forward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 220);
-  analogWrite(PWM_B, 220);
+  analogWrite(PWM_A, 150);
+  analogWrite(PWM_B, 150);
   delay(1700);
 }
 
@@ -332,8 +332,8 @@ void forward(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 220);
-  analogWrite(PWM_B, 220);
+  analogWrite(PWM_A, 150);
+  analogWrite(PWM_B, 150);
   delay(delay_second);
 }
 
@@ -344,7 +344,7 @@ void left(int delay_second) {         //function of backward
   digitalWrite(MOTOR_BB, HIGH);
 
   analogWrite(PWM_A, 0);
-  analogWrite(PWM_B, 220);
+  analogWrite(PWM_B, 150);
   delay(delay_second);
 }
 
@@ -354,7 +354,7 @@ void right(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 220);
+  analogWrite(PWM_A, 150);
   analogWrite(PWM_B, 0);
   delay(delay_second);
 }
@@ -365,8 +365,8 @@ void slightRight(int delay_second) {
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 220);
-  analogWrite(PWM_B, 190);
+  analogWrite(PWM_A, 150);
+  analogWrite(PWM_B, 120);
   delay(delay_second);
 }
 
@@ -376,8 +376,8 @@ void slightLeft(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 190);
-  analogWrite(PWM_B, 220);
+  analogWrite(PWM_A, 120);
+  analogWrite(PWM_B, 150);
   delay(delay_second);
 }
 
