@@ -40,8 +40,8 @@ TinyGPSPlus gps;
 SoftwareSerial softSerial(RXPin, TXPin);
 
 // WiFi parameters
-#define WLAN_SSID       "Alexa"
-#define WLAN_PASS       "67899876"
+#define WLAN_SSID       "E_four"
+#define WLAN_PASS       "passwordapa"
 
 // Adafruit IO
 #define AIO_SERVER      "io.adafruit.com"
@@ -66,8 +66,8 @@ float speed_mph = 0;
 float alltitude = 0;
 double lati; //Storing the Latitude
 double longi; //Storing the Longitude
-double destination_x[3] = {4.381565, 4.381669, 4.381604};
-double destination_y[3] = {100.965886, 100.965819, 100.965709};
+double destination_x[3] = {4.381565, 4.381669, 4.381560};
+double destination_y[3] = {100.965886, 100.965819, 100.965751};
 
 int destination_counter = 0;
 double bearing;
@@ -232,30 +232,32 @@ void loop() {
       u_turn();
       forward(3000);
     }
-    if (filtered_distance < 150) {
-      if (object_detected_left == HIGH) {
-        servo.write(66);
-        slightRight(1000);
-      } else if (object_detected_right == HIGH) {
-        servo.write(126);
-        slightLeft(1000);
+      if (object_detected_left == HIGH || object_detected_right == HIGH) {
+        if (a > bearing+15) {
+          servo.write(126);
+          slightLeft(3000);
+        }
+        if (a < bearing-15) {
+          //boat need to turn right
+          servo.write(66);
+          slightRight(3000);
+        }
       } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
         servo.write(96);
         forward(1000);
       }
-    }
     a = get_azimuth();
   }
 
   if (a > bearing+5) {
     servo.write(126);
-    left(500);
+    left(300);
   }
   
   if (a < bearing-5) {
   //boat need to turn right
     servo.write(66);
-    right(500);
+    right(300);
   }
 
   //motor
@@ -310,8 +312,8 @@ void reverse() {          //function of forward
   digitalWrite(MOTOR_B, HIGH);
   digitalWrite(MOTOR_BB, LOW);
 
-  analogWrite(PWM_A, 150);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
   delay(3000);
 }
 
@@ -321,8 +323,8 @@ void u_turn() {          //function of forward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
   delay(1700);
 }
 
@@ -332,8 +334,8 @@ void forward(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 200);
   delay(delay_second);
 }
 
@@ -344,7 +346,7 @@ void left(int delay_second) {         //function of backward
   digitalWrite(MOTOR_BB, HIGH);
 
   analogWrite(PWM_A, 0);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_B, 200);
   delay(delay_second);
 }
 
@@ -354,7 +356,7 @@ void right(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
+  analogWrite(PWM_A, 200);
   analogWrite(PWM_B, 0);
   delay(delay_second);
 }
@@ -365,8 +367,8 @@ void slightRight(int delay_second) {
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 150);
-  analogWrite(PWM_B, 120);
+  analogWrite(PWM_A, 200);
+  analogWrite(PWM_B, 150);
   delay(delay_second);
 }
 
@@ -376,8 +378,8 @@ void slightLeft(int delay_second) {         //function of backward
   digitalWrite(MOTOR_B, LOW);
   digitalWrite(MOTOR_BB, HIGH);
 
-  analogWrite(PWM_A, 120);
-  analogWrite(PWM_B, 150);
+  analogWrite(PWM_A, 150);
+  analogWrite(PWM_B, 200);
   delay(delay_second);
 }
 
