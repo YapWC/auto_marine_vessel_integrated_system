@@ -58,6 +58,8 @@ Adafruit_MQTT_Publish GPSLocation = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/
 Adafruit_MQTT_Publish Ultrasonic = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Ultrasonic Display/csv");
 Adafruit_MQTT_Publish Magnetometer = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Magnetometer Display/csv");
 Adafruit_MQTT_Publish Target = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Target Angle/csv");
+Adafruit_MQTT_Publish Power = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Power Consumption/csv");
+
 
 
 // variables will change:
@@ -306,7 +308,7 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     // Save the last time data was published
     previousMillis = currentMillis;
     // Publish your data here
-    publishData(bearing, gpsdata, filtered_distance, a);
+    publishData(bearing, gpsdata, filtered_distance, a, total_power_consumption);
     //publishData();
   }
   currentMillis = millis();
@@ -470,7 +472,7 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     }
     return heading;
 }
-void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
+void publishData(double bearing, char gpsdata[120], float filtered_distance, int a, float total_power_consumption) {
     if (!Target.publish(bearing)) {                     //Publish to Adafruit
     Serial.println(F("Target Angle Failed"));
     }
@@ -495,6 +497,11 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     }
     else {
       Serial.println(F("Bearing Sent!"));
+    }
+    if (!Power.publish(total_power_consumption)) {
+      Serial.println(F("Power Consumption Failed!"));
+    } else {
+      Serial.println(F("Power Consumption Sent!"));
     }
 }
 
