@@ -58,6 +58,8 @@ Adafruit_MQTT_Publish GPSLocation = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/
 Adafruit_MQTT_Publish Ultrasonic = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Ultrasonic Display/csv");
 Adafruit_MQTT_Publish Magnetometer = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Magnetometer Display/csv");
 Adafruit_MQTT_Publish Target = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Target Angle/csv");
+Adafruit_MQTT_Publish Power = Adafruit_MQTT_Publish(&mqtt, AIO_USERNAME "/feeds/Power Consumption/csv");
+
 
 
 // variables will change:
@@ -78,6 +80,11 @@ int a;
 //object detection
 int object_detected_left = 0;
 int object_detected_right = 0;
+
+// Power consumption
+float voltage = 5.0;
+float current = 0.5;
+float total_power_consumption = 0.0;
 
 #define ARRAY_SIZE 5 // Size of the array
 #define DELAY_BETWEEN_MEASUREMENTS 30 // Delay between ultrasonic measurements in milliseconds
@@ -239,21 +246,26 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
       servo.write(66);
       reverse();
       u_turn();
+      calculate_power_consumption(3500);
     }
 
   if (bearing-10 < a && a < bearing+10) {
     if (object_detected_left == HIGH) {
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     } else if (object_detected_right == HIGH) {
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     } else if (object_detected_left == HIGH && object_detected_right == HIGH) {
       servo.write(126);
       forward();
+      calculate_power_consumption(500);
     } else {
       servo.write(96);
       forward();
+      calculate_power_consumption(500);
     }
   }
   else if (a > bearing+10) {
@@ -261,9 +273,11 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     //boat need to turn right
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     } else {
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     }
   }
   else if (a < bearing-10) {
@@ -271,9 +285,11 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     if (a < bearing-180){
       servo.write(126);
       left();
+      calculate_power_consumption(500);
     } else {
       servo.write(66);
       right();
+      calculate_power_consumption(500);
     }
   }
 
@@ -292,7 +308,7 @@ object_detected_right = digitalRead(OBJECT_RIGHT);
     // Save the last time data was published
     previousMillis = currentMillis;
     // Publish your data here
-    publishData(bearing, gpsdata, filtered_distance, a);
+    publishData(bearing, gpsdata, filtered_distance, a, total_power_consumption);
     //publishData();
   }
   currentMillis = millis();
@@ -456,7 +472,7 @@ double calculate_gps_heading(double lat1, double lon1, double lat2, double lon2)
     }
     return heading;
 }
-void publishData(double bearing, char gpsdata[120], float filtered_distance, int a) {
+void publishData(double bearing, char gpsdata[120], float filtered_distance, int a, float total_power_consumption) {
     if (!Target.publish(bearing)) {                     //Publish to Adafruit
     Serial.println(F("Target Angle Failed"));
     }
@@ -482,4 +498,16 @@ void publishData(double bearing, char gpsdata[120], float filtered_distance, int
     else {
       Serial.println(F("Bearing Sent!"));
     }
+    if (!Power.publish(total_power_consumption)) {
+      Serial.println(F("Power Consumption Failed!"));
+    } else {
+      Serial.println(F("Power Consumption Sent!"));
+    }
+}
+
+void calculate_power_consumption(int seconds) {
+  float power = voltage*current;
+  float power_per_second = power/3600;
+  float total = power_per_second*seconds;
+  total_power_consumption = total_power_consumption + total;
 }
